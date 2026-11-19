@@ -12,5 +12,6 @@ jobs:
         env:
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
-          curl -sS \
-            "https://api.telegram.org/bot${BOT_TOKEN}/getUpdates"
+          curl --fail-with-body -sS \
+            "https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=-10&limit=10"
+            
