@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827"><title>Gold News Monitor v3</title>
+<style>
+:root{--bg:#0b1220;--panel:#142033;--line:#2a3b52;--txt:#eef4fb;--muted:#9fb0c5;--red:#ef4444;--orange:#f59e0b;--green:#22c55e;--blue:#3b82f6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.85 Tahoma,Arial}main{max-width:980px;margin:auto;padding:16px}
+header,.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+h1{font-size:22px;margin:0}h2{font-size:17px;margin:0 0 12px}.muted{color:var(--muted);font-size:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:14px 0}
+.stat{background:#0d1929;padding:12px;border:1px solid var(--line);border-radius:12px}.stat b{display:block;font-size:24px}
+button,select{background:#20334d;border:1px solid #3b5270;color:var(--txt);border-radius:9px;padding:9px 13px;font:inherit}
+button.primary{background:#2563eb;border:0}.tag{border-radius:30px;padding:3px 9px;font-size:11px}
+.high{background:#4a2026;color:#ffaaaa}.medium{background:#493719;color:#ffd18a}.low{background:#243247;color:#c4d2e4}
+.event{padding:13px 0;border-top:1px solid var(--line)}.event:first-child{border:0}
+.scenario{background:#0c1726;padding:12px;border-radius:10px;font-size:13px}.good{color:#86efac}.warn{color:#fbbf24}.bad{color:#fca5a5}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}a{color:#93c5fd}footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}
+@media(max-width:520px){main{padding:10px}.stat{padding:8px}.stat b{font-size:20px}}
+</style></head>
+<body><main>
+<header>
+ <div class="row"><div><h1>Gold News Monitor</h1><div class="muted">پایش اخبار اقتصادی مؤثر بر XAUUSD · نسخه ۳ · پایش خبر و تحلیل روزانه</div></div><span class="tag" style="background:#163d2c;color:#86efac">منبع رایگان</span></div>
+ <div class="muted" id="clock" style="margin-top:8px"></div>
+ <div class="tabs"><button class="primary" id="refresh">به‌روزرسانی اخبار</button><button id="notify">فعال‌سازی اعلان</button><a href="https://www.forexfactory.com/calendar" target="_blank" rel="noopener">Forex Factory</a></div>
+ <div class="muted" id="status">در انتظار دریافت اطلاعات…</div>
+</header>
+<section class="stats">
+ <div class="stat"><span class="muted">خبرهای قرمز</span><b id="highN">—</b></div>
+ <div class="stat"><span class="muted">خبرهای نارنجی</span><b id="medN">—</b></div>
+ <div class="stat"><span class="muted">کل خبرهای USD</span><b id="totalN">—</b></div>
+</section>
+<section class="card"><h2>گزارش صبحگاهی · ساعت ۰۹:۰۰ ایران</h2><div id="report" class="scenario">با دریافت تقویم، خلاصه خبرهای مهم امروز اینجا نمایش داده می‌شود.</div></section>
+<section class="card"><div class="row"><h2>تقویم اخبار مؤثر بر طلا</h2><select id="filter"><option value="all">همه خبرهای مهم و متوسط</option><option value="high">فقط قرمز / High</option><option value="medium">فقط نارنجی / Medium</option></select></div><div id="events" class="muted">هنوز اطلاعاتی دریافت نشده است.</div></section>
+<section class="card"><h2>قواعد تفسیر اثر خبر بر طلا</h2><div class="scenario"><b class="good">احتمال حمایت از طلا:</b> داده آمریکا ضعیف‌تر از پیش‌بینی، در صورتی که دلار و بازده اوراق افت کنند.<br><b class="bad">احتمال فشار بر طلا:</b> داده قوی‌تر از پیش‌بینی، در صورتی که دلار و بازده اوراق رشد کنند.<br><b class="warn">واکنش نامشخص:</b> داده نزدیک پیش‌بینی، داده‌های متناقض یا واکنش خلاف انتظار دلار و اوراق.<br><br>این‌ها قواعد سناریویی‌اند، نه پیش‌بینی قطعی یا سیگنال ورود.</div></section>
+<section class="card"><h2>وضعیت هشدارها</h2><div class="muted">اعلان مرورگر و هشدارهای ۱۵ دقیقه قبل و لحظه انتشار فقط وقتی این صفحه باز و فعال باشد کار می‌کنند. برای اعلان واقعی در پس‌زمینه، باید نسخه HTTPS، سرویس‌ورکر و Push راه‌اندازی شود.</div><p><span class="tag medium">Morning · 09:00</span> <span class="tag medium">15min</span> <span class="tag medium">Release</span></p><div id="alertStatus" class="muted">اعلان‌ها هنوز فعال نشده‌اند.</div></section>
+
+<section class="card" id="intelligence">
+ <div class="row"><h2>هوش تحلیلی روزانه طلا · Gold Intelligence</h2><span class="tag medium">نسخه آزمایشی</span></div>
+ <p class="muted">منابع عمومی برای بررسی تحلیل‌ها؛ برای ثبت خودکار تحلیل‌ها و استخراج خودکار سطوح، اتصال سرویس سمت سرور در مرحله بعد لازم است.</p>
+ <div class="scenario">
+  <b>مرکز منابع تحلیل</b><br>
+  <div class="row" style="justify-content:flex-start;margin-top:8px;gap:12px;">
+   <a href="https://www.gold.org/goldhub/research" target="_blank" rel="noopener">World Gold Council</a>
+   <a href="https://www.lbma.org.uk/forecast-survey" target="_blank" rel="noopener">LBMA Forecast</a>
+   <a href="https://www.reuters.com/markets/commodities/" target="_blank" rel="noopener">Reuters Commodities</a>
+   <a href="https://www.forexfactory.com/" target="_blank" rel="noopener">Forex Factory</a>
+   <a href="https://x.com/search?q=XAUUSD%20gold%20analysis&src=typed_query" target="_blank" rel="noopener">جست‌وجوی X</a>
+  </div>
+ </div>
+ <h2 style="margin-top:16px">ثبت تحلیل منتشرشده</h2>
+ <div class="muted">مقادیر را از تحلیل‌گر یا گزارش منبع وارد کن. برنامه میانگین و تعداد تکرار محدوده‌های نزدیک را محاسبه می‌کند؛ این اعداد تأیید مستقل یا سیگنال معامله نیستند.</div>
+ <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin-top:12px">
+  <label>نام تحلیل‌گر / مؤسسه<input id="analystName" placeholder="مثلاً نام منبع" /></label>
+  <label>لینک منبع<input id="analystUrl" type="url" placeholder="https://..." /></label>
+  <label>جهت دیدگاه<select id="analystBias"><option value="neutral">خنثی</option><option value="bullish">صعودی</option><option value="bearish">نزولی</option></select></label>
+  <label>حمایت (قیمت)<input id="analystSupport" type="number" step="0.01" placeholder="مثلاً 4000" /></label>
+  <label>مقاومت (قیمت)<input id="analystResistance" type="number" step="0.01" placeholder="مثلاً 4050" /></label>
+ </div>
+ <label style="display:block;margin-top:9px">خلاصه استدلال / تاریخ انتشار<textarea id="analystNotes" rows="2" placeholder="خلاصه تحلیل و زمان انتشار را وارد کن..."></textarea></label>
+ <div class="tabs"><button class="primary" id="saveAnalyst">ثبت تحلیل</button><button id="clearAnalysts">پاک‌کردن داده‌های ثبت‌شده</button></div>
+ <div class="stats">
+  <div class="stat"><span class="muted">تعداد تحلیل‌های ثبت‌شده</span><b id="analystCount">۰</b></div>
+  <div class="stat"><span class="muted">دیدگاه غالب</span><b id="dominantBias" style="font-size:17px">—</b></div>
+  <div class="stat"><span class="muted">سطوح قابل مقایسه</span><b id="levelCount">۰</b></div>
+ </div>
+ <div class="scenario" id="consensusOutput">هنوز تحلیلی ثبت نشده است.</div>
+ <div id="analystList" class="muted" style="margin-top:10px"></div>
+ <p class="muted">شفافیت: در این نسخه، داده‌های تحلیل‌گران را خودت از منابع بازشده ثبت می‌کنی. خزیدن خودکار در وب‌سایت‌ها و X، اعتبارسنجی منابع و اعلان‌های پس‌زمینه هنوز متصل نشده‌اند؛ برای آن‌ها به Worker زمان‌بندی‌شده و سرویس Push نیاز داریم.</p>
+</section>
+<style>
+label{display:block;color:var(--muted);font-size:12px}input,textarea{display:block;width:100%;margin-top:4px;background:#0d1929;border:1px solid var(--line);border-radius:9px;padding:10px;color:var(--txt);font:inherit}textarea{resize:vertical}
+</style>
+
+<footer>داده تقویم از ShowMyTrades دریافت می‌شود. زمان و رویدادها ممکن است تغییر کنند؛ پیش از تصمیم معاملاتی منبع ناشر را بررسی کن.</footer>
+</main>
+<script>
+const API='https://showmytrades.com/api/public/calendar/v1?currency=USD&impact=high,medium&days=7';
+const $=id=>document.getElementById(id);let events=[],sent=new Set(),lastMorningDay='';
+function dateOf(e){if(e.ts!==undefined&&e.ts!==null)return new Date(Number(e.ts)*1000);if(e.time)return new Date(e.time);return new Date(NaN)}
+function tehran(d,opts={dateStyle:'medium',timeStyle:'short'}){return new Intl.DateTimeFormat('fa-IR',{...opts,timeZone:'Asia/Tehran'}).format(d)}
+function dayKey(d){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tehran',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)}
+function impact(e){let v=String(e.impact||'').toLowerCase();return v==='high'?'high':v==='medium'?'medium':'low'}
+function usd(e){return String(e.currency||'').toUpperCase()==='USD'}
+function title(e){return e.title||e.event||e.name||'رویداد اقتصادی'}
+function eventKey(e){return String(e.id||e.ts||title(e))}
+function analysis(e){
+ const n=title(e).toLowerCase();
+ if(/cpi|inflation|ppi|pce|payroll|non.?farm|employment|unemployment|fomc|interest rate|fed|gdp|retail sales|powell|ism/.test(n))
+ return 'خبر بالقوه بسیار اثرگذار بر طلاست. بعد از انتشار، Actual را با Forecast مقایسه کن و هم‌زمان واکنش شاخص دلار و بازده اوراق آمریکا را بسنج.';
+ return 'اثر مستقیم این خبر بر طلا قطعی نیست. اختلاف Actual و Forecast و واکنش دلار و بازده اوراق را بررسی کن.';
+}
+function render(){
+ const filtered=events.filter(e=>usd(e)&&impact(e)!=='low');
+ const f=$('filter').value,arr=filtered.filter(e=>f==='all'||impact(e)===f);
+ $('highN').textContent=filtered.filter(e=>impact(e)==='high').length;
+ $('medN').textContent=filtered.filter(e=>impact(e)==='medium').length;
+ $('totalN').textContent=filtered.length;
+ $('events').innerHTML=arr.length?arr.map(e=>{
+  const d=dateOf(e),imp=impact(e),tag=imp==='high'?'قرمز / High':'نارنجی / Medium';
+  return `<div class="event"><div class="row"><b>${title(e)}</b><span class="tag ${imp}">${tag}</span></div>
+  <div class="muted">USD · ${isNaN(d)?'زمان نامشخص':tehran(d)} · وضعیت: ${e.status||'نامشخص'} · اطمینان منبع: ${e.confidence||'—'}</div>
+  <div class="muted">پیش‌بینی: ${e.forecast??'—'} · قبلی: ${e.previous??'—'} · واقعی: ${e.actual||'منتشر نشده'}</div>
+  <div class="scenario">${analysis(e)}</div></div>`;
+ }).join(''):'برای این فیلتر خبری ثبت نشده است.';
+ const today=dayKey(new Date()),todays=filtered.filter(e=>!isNaN(dateOf(e))&&dayKey(dateOf(e))===today),high=todays.filter(e=>impact(e)==='high');
+ $('report').innerHTML=`امروز ${todays.length} خبر مهم یا متوسط USD در داده دریافتی وجود دارد؛ ${high.length} خبر قرمز است.<br>`+
+ (todays.length?todays.sort((a,b)=>dateOf(a)-dateOf(b)).map(e=>`• ${title(e)} — ${tehran(dateOf(e))} (${impact(e)==='high'?'قرمز':'نارنجی'})`).join('<br>'):'برای امروز خبر مهم یا متوسط USD در داده فعلی پیدا نشد.')+
+ '<br><br><b>یادآوری:</b> رنگ خبر به‌تنهایی جهت حرکت طلا را مشخص نمی‌کند.';
+}
+async function load(){
+ $('status').textContent='در حال دریافت تقویم اقتصادی…';
+ try{
+  const res=await fetch(API,{cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);
+  const json=await res.json();events=Array.isArray(json)?json:(json.events||json.data||[]);
+  if(!events.length)throw Error('آرایه events خالی است');
+  $('status').textContent=`دریافت موفق · ${json.count??events.length} رویداد در پاسخ منبع · تولید داده: ${json.generated_at||'نامشخص'}`;
+  render();checkAlerts();
+ }catch(err){
+  $('status').textContent='دریافت خودکار از این مرورگر ناموفق بود: '+err.message+'؛ ممکن است محدودیت شبکه یا CORS باشد.';
+  $('events').innerHTML='<a href="https://showmytrades.com/api/public/calendar/v1?currency=USD&impact=high,medium&days=7" target="_blank">مشاهده مستقیم داده منبع</a> · <a href="https://www.forexfactory.com/calendar" target="_blank">تقویم Forex Factory</a>';
+ }
+}
+function sendNotice(id,msg){if(sent.has(id))return;sent.add(id);if('Notification'in window&&Notification.permission==='granted')new Notification('Gold News Monitor',{body:msg});}
+function checkAlerts(){
+ const now=Date.now();
+ for(const e of events.filter(x=>usd(x)&&impact(x)!=='low')){
+  const d=dateOf(e);if(isNaN(d))continue;const diff=d.getTime()-now,k=eventKey(e);
+  if(diff<=15*60*1000&&diff>14*60*1000)sendNotice(k+'-15','۱۵ دقیقه تا انتشار: '+title(e));
+  if(diff<=0&&diff>-60*1000)sendNotice(k+'-release','خبر منتشر شد: '+title(e));
+ }
+ const t=new Date(),key=dayKey(t),tehranHour=Number(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tehran',hour:'2-digit',hourCycle:'h23'}).format(t));
+ const minute=Number(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tehran',minute:'2-digit'}).format(t));
+ if(tehranHour===9&&minute===0&&lastMorningDay!==key){lastMorningDay=key;sendNotice('morning-'+key,'گزارش صبحگاهی اخبار USD آماده بررسی است.')}
+}
+
+const analystStoreKey='goldNewsAnalystsV1';
+function getAnalysts(){try{return JSON.parse(localStorage.getItem(analystStoreKey)||'[]')}catch{return []}}
+function saveAnalysts(a){localStorage.setItem(analystStoreKey,JSON.stringify(a));renderAnalysts()}
+function nearClusters(values,tolerance=3){
+ const sorted=values.filter(v=>Number.isFinite(v)&&v>0).sort((a,b)=>a-b),clusters=[];
+ for(const v of sorted){let c=clusters.find(x=>Math.abs(x.mean-v)<=tolerance);if(!c){c={values:[],mean:v};clusters.push(c)}c.values.push(v);c.mean=c.values.reduce((a,b)=>a+b,0)/c.values.length;}
+ return clusters.sort((a,b)=>b.values.length-a.values.length);
+}
+function renderAnalysts(){
+ const a=getAnalysts();$('analystCount').textContent=a.length.toLocaleString('fa-IR');
+ const counts={bullish:a.filter(x=>x.bias==='bullish').length,bearish:a.filter(x=>x.bias==='bearish').length,neutral:a.filter(x=>x.bias==='neutral').length};
+ const max=Math.max(counts.bullish,counts.bearish,counts.neutral);
+ $('dominantBias').textContent=a.length?(counts.bullish===max&&counts.bearish===max?'اختلاف نظر':counts.bullish===max?'صعودی':counts.bearish===max?'نزولی':'خنثی'):'—';
+ const supports=nearClusters(a.map(x=>Number(x.support))),resistances=nearClusters(a.map(x=>Number(x.resistance)));
+ $('levelCount').textContent=(supports.length+resistances.length).toLocaleString('fa-IR');
+ const fmt=x=>x.toLocaleString('en-US',{maximumFractionDigits:2});
+ const clusterText=(name,cs)=>cs.length?`<b>${name}</b><br>`+cs.map(c=>`${fmt(c.mean)} · ${c.values.length} منبع ثبت‌شده`).join('<br>'):'داده کافی ثبت نشده است.';
+ $('consensusOutput').innerHTML=`<b>جمع‌بندی دیدگاه‌ها</b><br>صعودی: ${counts.bullish} · نزولی: ${counts.bearish} · خنثی: ${counts.neutral}<br><br>${clusterText('خوشه‌های حمایت',supports)}<br><br>${clusterText('خوشه‌های مقاومت',resistances)}<br><br><span class="warn">توجه: خوشه‌بندی فعلی صرفاً محاسبه عددی روی داده‌های دستی است؛ کیفیت منبع، استقلال تحلیل‌ها و اعتبار زمانی هنوز به‌صورت خودکار ارزیابی نمی‌شود.</span>`;
+ $('analystList').innerHTML=a.length?'<b>تحلیل‌های ثبت‌شده</b>'+a.slice().reverse().map(x=>`<div class="event"><b>${escapeHtml(x.name)}</b> · ${x.bias==='bullish'?'صعودی':x.bias==='bearish'?'نزولی':'خنثی'}<br><span class="muted">حمایت: ${x.support||'—'} · مقاومت: ${x.resistance||'—'} · ${escapeHtml(x.date)}</span>${x.url?`<br><a href="${escapeAttr(x.url)}" target="_blank" rel="noopener">مشاهده منبع</a>`:''}${x.notes?`<p>${escapeHtml(x.notes)}</p>`:''}</div>`).join(''):'هیچ تحلیلی ثبت نشده است.';
+}
+function escapeHtml(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function escapeAttr(v){return escapeHtml(v).replace(/`/g,'&#96;')}
+$('saveAnalyst').onclick=()=>{
+ const name=$('analystName').value.trim(),url=$('analystUrl').value.trim(),support=$('analystSupport').value,resistance=$('analystResistance').value;
+ if(!name){alert('نام تحلیل‌گر یا مؤسسه را وارد کن.');return}
+ if(url&&!/^https:\/\//i.test(url)){alert('لینک باید با https:// شروع شود.');return}
+ const a=getAnalysts();a.push({name,url,bias:$('analystBias').value,support:support?Number(support):null,resistance:resistance?Number(resistance):null,notes:$('analystNotes').value.trim(),date:new Date().toLocaleString('fa-IR')});saveAnalysts(a);
+ ['analystName','analystUrl','analystSupport','analystResistance','analystNotes'].forEach(id=>$(id).value='');$('analystBias').value='neutral';
+};
+$('clearAnalysts').onclick=()=>{if(confirm('همه تحلیل‌های ذخیره‌شده در این مرورگر پاک شوند؟')){localStorage.removeItem(analystStoreKey);renderAnalysts()}};
+renderAnalysts();
+
+$('refresh').onclick=load;$('filter').onchange=render;
+$('notify').onclick=async()=>{if(!('Notification'in window)){alert('این مرورگر اعلان را پشتیبانی نمی‌کند.');return}const p=await Notification.requestPermission();$('alertStatus').textContent=p==='granted'?'مجوز اعلان فعال شد؛ هشدارهای این نسخه هنگام بازبودن صفحه اجرا می‌شوند.':'مجوز اعلان داده نشد.';if(p==='granted')new Notification('Gold News Monitor',{body:'اعلان مرورگر فعال شد.'})};
+function updateClock(){$('clock').textContent='زمان ایران: '+tehran(new Date(),{dateStyle:'full',timeStyle:'medium'});}
+updateClock();setInterval(updateClock,1000);load();setInterval(()=>{checkAlerts();},15000);setInterval(load,5*60*1000);
+</script></body></html>
