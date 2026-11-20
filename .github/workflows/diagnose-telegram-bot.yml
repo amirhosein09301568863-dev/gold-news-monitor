@@ -1,0 +1,30 @@
+name: Diagnose Telegram Bot
+
+on:
+  workflow_dispatch:
+
+jobs:
+  identify-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Identify bot linked to TELEGRAM_BOT_TOKEN
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          if [ -z "$BOT_TOKEN" ]; then
+            echo "ERROR: TELEGRAM_BOT_TOKEN secret is empty or missing."
+            exit 1
+          fi
+
+          RESPONSE=$(curl --fail-with-body -sS "https://api.telegram.org/bot${BOT_TOKEN}/getMe")
+          echo "$RESPONSE" | python -c '
+          import json, sys
+          data = json.load(sys.stdin)
+          if not data.get("ok"):
+              print("Telegram API error:", data.get("description", "Unknown error"))
+              sys.exit(1)
+          bot = data["result"]
+          print("Connected bot username: @" + bot.get("username", "unknown"))
+          print("Bot display name:", bot.get("first_name", "unknown"))
+          print("Bot ID:", bot.get("id", "unknown"))
+          '
