@@ -1,4 +1,3 @@
-
 name: Get Telegram Chat ID
 
 on:
@@ -8,10 +7,67 @@ jobs:
   get-id:
     runs-on: ubuntu-latest
     steps:
-      - name: Get chat updates
+      - name: Find latest chat and send a test message
         env:
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
-          curl --fail-with-body -sS \
-            "https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=-10&limit=10"
-            
+          python - <<'PY'
+          import json
+          import os
+          import sys
+          import urllib.parse
+          import urllib.request
+
+          token = os.environ.get("BOT_TOKEN", "").strip()
+          if not token:
+              print("ERROR: TELEGRAM_BOT_TOKEN secret is missing.")
+              sys.exit(1)
+
+          base = f"https://api.telegram.org/bot{token}/"
+
+          def telegram(method, payload=None):
+              data = None if payload is None else urllib.parse.urlencode(payload).encode()
+              req = urllib.request.Request(base + method, data=data)
+              with urllib.request.urlopen(req, timeout=25) as response:
+                  result = json.loads(response.read().decode())
+              if not result.get("ok"):
+                  raise RuntimeError(result.get("description", "Telegram API error"))
+              return result["result"]
+
+          try:
+              # getUpdates cannot run while a webhook is configured.
+              telegram("deleteWebhook", {"drop_pending_updates": "false"})
+              updates = telegram("getUpdates", {"timeout": 10, "limit": 100})
+          except Exception as exc:
+              print("Telegram API error:", str(exc))
+              sys.exit(1)
+
+          candidates = []
+          for update in updates:
+              for key in ("message", "edited_message", "channel_post", "edited_channel_post"):
+                  item = update.get(key)
+                  if item and item.get("chat", {}).get("id") is not None:
+                      candidates.append(item["chat"])
+
+          if not candidates:
+              print("No incoming chat update was found.")
+              print("Open @Golden1385bot, press Start, send a NEW text message, then run this workflow again.")
+              print("If you sent the message before this workflow started, send another new message now.")
+              sys.exit(1)
+
+          chat = candidates[-1]
+          chat_id = str(chat["id"])
+          print("Chat ID found:", chat_id)
+          print("Chat type:", chat.get("type", "unknown"))
+
+          try:
+              sent = telegram("sendMessage", {
+                  "chat_id": chat_id,
+                  "text": "✅ اتصال تلگرام موفق است. شناسه چت با موفقیت شناسایی شد."
+              })
+          except Exception as exc:
+              print("Chat ID was found, but test message failed:", str(exc))
+              sys.exit(1)
+
+          print("SUCCESS: Test message sent to the detected chat.")
+          PY
